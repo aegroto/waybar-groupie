@@ -1,5 +1,6 @@
 use std::process::Command;
 
+use serde::Serialize;
 use serde_json::Value;
 
 fn json_cmd(command: &str, args: &[&str]) -> Value {
@@ -20,16 +21,26 @@ fn json_cmd(command: &str, args: &[&str]) -> Value {
         .expect("Unable to parse command {command} {args:?} output as JSON")
 }
 
+#[derive(Serialize)]
+struct Output {
+    text: String,
+}
+
 fn main() {
     let active_windows = fetch_active_windows_data();
 
-    let output = active_windows
+    let text = active_windows
         .iter()
         .map(ActiveWindow::as_display_str)
         .collect::<Vec<String>>()
         .join(" | ");
 
-    println!("{output}")
+    let output = Output { text };
+
+    println!(
+        "{}",
+        serde_json::to_string(&output).expect("Failed output JSON serialization")
+    )
 }
 
 struct ActiveWindow {
