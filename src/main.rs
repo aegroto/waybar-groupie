@@ -84,9 +84,11 @@ fn run_update() -> Output {
     let active_windows = fetch_active_windows_data();
 
     let separator = " || ";
+    let window_width = 100 / active_windows.len();
+
     let text = active_windows
         .iter()
-        .map(ActiveWindow::as_display_str)
+        .map(|window| window.as_display_str(window_width))
         .collect::<Vec<String>>()
         .join(separator);
 
@@ -139,25 +141,41 @@ impl ActiveWindow {
         }
     }
 
-    fn as_display_str(&self) -> String {
+    fn as_display_str(&self, width: usize) -> String {
+        format!(
+            "<span line_height=\"1.5\" background=\"{}\"> {} </span>",
+            self.display_background_color(),
+            self.display_formatted_text(width)
+        )
+    }
+
+    fn display_formatted_text(&self, width: usize) -> String {
         let appless_title = self.title.replace(&format!(" - {}", self.app_name), "");
 
-        let window_content = if self.active {
-            format!("<b>{}: {}</b>", self.app_name, appless_title)
+        let mut text = format!("{}: {}", self.app_name, appless_title);
+
+        if text.len() > width {
+            text = format!("{}...", &text[0..width - 3]);
         } else {
-            format!("{}: {}", self.app_name, appless_title)
+            let padding = " ".repeat((width - text.len()) / 2);
+            text = format!("{}{}{}", padding, text, padding);
+        }
+
+        let formatted_text = if self.active {
+            format!("<b>{}</b>", text)
+        } else {
+            text
         };
 
-        let background_color = if self.active {
+        formatted_text
+    }
+
+    fn display_background_color(&self) -> &str {
+        if self.active {
             "#FFFFFF66"
         } else {
             "#99999966"
-        };
-
-        format!(
-            "<span line_height=\"1.5\" background=\"{}\"> {} </span>",
-            background_color, window_content,
-        )
+        }
     }
 }
 
