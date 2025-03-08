@@ -1,6 +1,5 @@
 use std::{
     io::{BufRead, BufReader},
-    os::unix::net::UnixStream,
     process::Command,
     time::Duration,
 };
@@ -8,8 +7,10 @@ use std::{
 use config::Config;
 use serde::Serialize;
 use serde_json::Value;
+use socket::connect_to_hyprland_socket;
 
 mod config;
+mod socket;
 
 fn json_cmd(command: &str, args: &[&str]) -> Value {
     let output_str = String::from_utf8(
@@ -57,7 +58,7 @@ fn main() {
     log::debug!("Running with config: {config:?}");
 
     let stream = loop {
-        if let Some(value) = connect_to_hyprland_socket() {
+        if let Some(value) = connect_to_hyprland_socket(&config) {
             break value;
         }
 
@@ -71,24 +72,6 @@ fn main() {
     for _ in event_reader.lines() {
         run_update(&config).print_out();
     }
-}
-
-fn connect_to_hyprland_socket() -> Option<UnixStream> {
-    log::info!("Connecting to unix socket...");
-
-    let socket_address = format!(
-        "{}/hypr/{}/.socket2.sock",
-        std::env::var("XDG_RUNTIME_DIR").unwrap(),
-        std::env::var("HYPRLAND_INSTANCE_SIGNATURE").unwrap(),
-    );
-
-    Some(match UnixStream::connect(socket_address) {
-        Ok(socket) => socket,
-        Err(err) => {
-            Output::with_error(&format!("Failed to connect to Unix socket: {err:?}")).print_out();
-            return None;
-        }
-    })
 }
 
 fn run_update(config: &Config) -> Output {

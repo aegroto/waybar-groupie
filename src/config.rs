@@ -4,10 +4,21 @@ use serde::Deserialize;
 pub struct Config {
     #[serde(default = "default_separator")]
     pub separator: String,
+
+    #[serde(default = "default_socket_address")]
+    pub socket_address: String,
 }
 
 fn default_separator() -> String {
     " || ".to_owned()
+}
+
+fn default_socket_address() -> String {
+    format!(
+        "{}/hypr/{}/.socket2.sock",
+        std::env::var("XDG_RUNTIME_DIR").unwrap(),
+        std::env::var("HYPRLAND_INSTANCE_SIGNATURE").unwrap(),
+    )
 }
 
 impl Config {
