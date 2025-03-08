@@ -1,4 +1,9 @@
-use std::{process::Command, time::Duration};
+use std::{
+    io::{BufRead, BufReader},
+    os::unix::net::UnixStream,
+    process::Command,
+    time::Duration,
+};
 
 use serde::Serialize;
 use serde_json::Value;
@@ -26,16 +31,53 @@ struct Output {
     text: String,
 }
 
-fn main() {
-    loop {
-        let output = run_update();
-        match serde_json::to_string(&output) {
+impl Output {
+    pub fn with_error(text: &str) -> Self {
+        Self {
+            text: format!("ERROR: {text}"),
+        }
+    }
+
+    pub fn print_out(&self) {
+        match serde_json::to_string(&self) {
             Ok(value) => println!("{value}"),
-            Err(err) => println!("Failed output JSON serialization: {err:?}"),
+            Err(err) => panic!("Failed output JSON serialization: {err:?}"),
+        }
+    }
+}
+
+fn main() {
+    let stream = loop {
+        if let Some(value) = connect_to_hyprland_socket() {
+            break value;
         }
 
+        Output::with_error("Couldn't connect to Hyprland socket, retrying...").print_out();
+
         std::thread::sleep(Duration::from_secs(1));
+    };
+
+    let event_reader = BufReader::new(stream);
+
+    for _ in event_reader.lines() {
+        run_update().print_out();
     }
+}
+
+fn connect_to_hyprland_socket() -> Option<UnixStream> {
+    let socket_address = format!(
+        "{}/hypr/{}/.socket2.sock",
+        std::env::var("XDG_RUNTIME_DIR").unwrap(),
+        std::env::var("HYPRLAND_INSTANCE_SIGNATURE").unwrap(),
+    );
+
+    Some(match UnixStream::connect(socket_address) {
+        Ok(socket) => socket,
+        Err(err) => {
+            Output::with_error(&format!("Failed to connect to Unix socket: {err:?}")).print_out();
+            return None;
+        }
+    })
 }
 
 fn run_update() -> Output {
