@@ -5,8 +5,11 @@ use std::{
     time::Duration,
 };
 
+use config::Config;
 use serde::Serialize;
 use serde_json::Value;
+
+mod config;
 
 fn json_cmd(command: &str, args: &[&str]) -> Value {
     let output_str = String::from_utf8(
@@ -47,6 +50,12 @@ impl Output {
 }
 
 fn main() {
+    env_logger::init();
+
+    let config = Config::load_from_env_path();
+
+    log::debug!("Running with config: {config:?}");
+
     let stream = loop {
         if let Some(value) = connect_to_hyprland_socket() {
             break value;
@@ -60,11 +69,13 @@ fn main() {
     let event_reader = BufReader::new(stream);
 
     for _ in event_reader.lines() {
-        run_update().print_out();
+        run_update(&config).print_out();
     }
 }
 
 fn connect_to_hyprland_socket() -> Option<UnixStream> {
+    log::info!("Connecting to unix socket...");
+
     let socket_address = format!(
         "{}/hypr/{}/.socket2.sock",
         std::env::var("XDG_RUNTIME_DIR").unwrap(),
@@ -80,10 +91,10 @@ fn connect_to_hyprland_socket() -> Option<UnixStream> {
     })
 }
 
-fn run_update() -> Output {
+fn run_update(config: &Config) -> Output {
     let active_windows = fetch_active_windows_data();
 
-    let separator = " || ";
+    let separator = &config.separator;
     let window_width = 100 / active_windows.len();
 
     let text = active_windows

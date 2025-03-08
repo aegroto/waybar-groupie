@@ -1,0 +1,28 @@
+use serde::Deserialize;
+
+#[derive(Deserialize, Debug)]
+pub struct Config {
+    #[serde(default = "default_separator")]
+    pub separator: String,
+}
+
+fn default_separator() -> String {
+    " || ".to_owned()
+}
+
+impl Config {
+    pub fn load_from_env_path() -> Self {
+        let config_path = std::env::var("GROUPIE_CONFIG_PATH")
+            .unwrap_or(".config/groupie/config.json".to_owned());
+
+        let file_content = match std::fs::read_to_string(config_path) {
+            Ok(value) => value,
+            Err(err) => {
+                log::warn!("Couldn't load configuration file: {err}, using default values");
+                "{}".to_owned()
+            }
+        };
+
+        serde_json::from_str(&file_content).unwrap()
+    }
+}
