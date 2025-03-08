@@ -143,12 +143,21 @@ impl ActiveWindow {
         let appless_title = self.title.replace(&format!(" - {}", self.app_name), "");
 
         let window_content = if self.active {
-            format!("<b>{}</b>: {}", self.app_name, appless_title)
+            format!("<b>{}: {}</b>", self.app_name, appless_title)
         } else {
-            format!("{}", self.app_name)
+            format!("{}: {}", self.app_name, appless_title)
         };
 
-        format!("<span line_height=\"1.5\">{}</span>", window_content)
+        let background_color = if self.active {
+            "#FFFFFF66"
+        } else {
+            "#99999966"
+        };
+
+        format!(
+            "<span line_height=\"1.5\" background=\"{}\"> {} </span>",
+            background_color, window_content,
+        )
     }
 }
 
