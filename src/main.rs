@@ -1,4 +1,4 @@
-use std::process::Command;
+use std::{process::Command, time::Duration};
 
 use serde::Serialize;
 use serde_json::Value;
@@ -27,20 +27,28 @@ struct Output {
 }
 
 fn main() {
+    loop {
+        let output = run_update();
+        match serde_json::to_string(&output) {
+            Ok(value) => println!("{value}"),
+            Err(err) => println!("Failed output JSON serialization: {err:?}"),
+        }
+
+        std::thread::sleep(Duration::from_secs(1));
+    }
+}
+
+fn run_update() -> Output {
     let active_windows = fetch_active_windows_data();
 
+    let separator = " || ";
     let text = active_windows
         .iter()
         .map(ActiveWindow::as_display_str)
         .collect::<Vec<String>>()
-        .join(" | ");
+        .join(separator);
 
-    let output = Output { text };
-
-    println!(
-        "{}",
-        serde_json::to_string(&output).expect("Failed output JSON serialization")
-    )
+    Output { text }
 }
 
 struct ActiveWindow {
@@ -92,11 +100,13 @@ impl ActiveWindow {
     fn as_display_str(&self) -> String {
         let appless_title = self.title.replace(&format!(" - {}", self.app_name), "");
 
-        if self.active {
-            format!("{}: {}", self.app_name, appless_title)
+        let window_content = if self.active {
+            format!("<b>{}</b>: {}", self.app_name, appless_title)
         } else {
             format!("{}", self.app_name)
-        }
+        };
+
+        format!("<span line_height=\"1.5\">{}</span>", window_content)
     }
 }
 
