@@ -102,7 +102,7 @@ fn run_update(config: &Config) -> Result<Output, Error> {
 
     let text = active_windows
         .iter()
-        .map(|window| window.as_display_str(window_width))
+        .map(|window| window.as_display_str(&config, window_width))
         .collect::<Vec<String>>()
         .join(separator);
 
@@ -163,9 +163,10 @@ impl ActiveWindow {
         })
     }
 
-    fn as_display_str(&self, width: usize) -> String {
+    fn as_display_str(&self, config: &Config, width: usize) -> String {
         format!(
-            "<tt><span line_height=\"1.5\" background=\"{}\"> {} </span></tt>",
+            "<tt><span line_height=\"{}\" background=\"{}\"> {} </span></tt>",
+            config.line_height,
             self.display_background_color(),
             self.display_formatted_text(width)
         )

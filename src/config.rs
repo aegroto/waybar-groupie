@@ -13,6 +13,13 @@ pub struct Config {
 
     #[serde(default = "default_width")]
     pub width: usize,
+
+    #[serde(default = "default_line_height")]
+    pub line_height: f32,
+}
+
+fn default_line_height() -> f32 {
+    1.0
 }
 
 fn default_width() -> usize {
