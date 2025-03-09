@@ -5,11 +5,13 @@ use std::{
 };
 
 use config::Config;
+use error::Error;
 use serde::Serialize;
 use serde_json::Value;
 use socket::connect_to_hyprland_socket;
 
 mod config;
+mod error;
 mod socket;
 
 fn json_cmd(command: &str, args: &[&str]) -> Value {
@@ -70,12 +72,21 @@ fn main() {
     let event_reader = BufReader::new(stream);
 
     for _ in event_reader.lines() {
-        run_update(&config).print_out();
+        match run_update(&config) {
+            Ok(update) => update.print_out(),
+            Err(error) => Output::with_error(&error.as_string()).print_out(),
+        };
     }
 }
 
-fn run_update(config: &Config) -> Output {
-    let active_windows = fetch_active_windows_data();
+fn run_update(config: &Config) -> Result<Output, Error> {
+    let active_windows = fetch_active_windows_data()?;
+
+    if active_windows.is_empty() {
+        return Ok(Output {
+            text: config.empty_text.clone(),
+        });
+    }
 
     let separator = &config.separator;
     let window_width = 100 / active_windows.len();
@@ -86,7 +97,7 @@ fn run_update(config: &Config) -> Output {
         .collect::<Vec<String>>()
         .join(separator);
 
-    Output { text }
+    Ok(Output { text })
 }
 
 struct ActiveWindow {
@@ -97,42 +108,48 @@ struct ActiveWindow {
 }
 
 impl ActiveWindow {
-    fn from_json_data(data: Value, active_window_title: String) -> Self {
+    fn from_json_data(data: Value, active_window_title: String) -> Result<Self, Error> {
         let group_index: usize = {
             let id = data["address"]
                 .as_str()
-                .expect("Non-string window id")
+                .ok_or(Error::WindowDataParsingError("Non-string window id"))?
                 .to_owned();
 
             data["grouped"]
                 .as_array()
-                .expect("Non-array window group ids")
+                .ok_or(Error::WindowDataParsingError("Non-array window group ids"))?
                 .to_owned()
                 .into_iter()
                 .map(|value| {
                     value
                         .as_str()
-                        .expect("Cannot cast window group id to string")
-                        .to_owned()
+                        .map(str::to_owned)
+                        .ok_or(Error::WindowDataParsingError("Non-array window group ids"))
                 })
+                .collect::<Result<Vec<String>, Error>>()?
+                .into_iter()
                 .position(|group_id| id == group_id)
-                .expect("Unable to find window id in group data")
+                .ok_or(Error::WindowDataParsingError(
+                    "Unable to find window id in group data",
+                ))?
         };
 
         let title = data["title"]
             .as_str()
-            .expect("Non-string window title")
+            .ok_or(Error::WindowDataParsingError("Non-string window title"))?
             .to_owned();
 
-        Self {
+        Ok(Self {
             active: title == active_window_title,
             title,
             group_index,
             app_name: data["initialTitle"]
                 .as_str()
-                .expect("Non-string window initialTitle")
+                .ok_or(Error::WindowDataParsingError(
+                    "Non-string window initialTitle",
+                ))?
                 .to_owned(),
-        }
+        })
     }
 
     fn as_display_str(&self, width: usize) -> String {
@@ -173,23 +190,27 @@ impl ActiveWindow {
     }
 }
 
-fn fetch_active_windows_data() -> Vec<ActiveWindow> {
+fn fetch_active_windows_data() -> Result<Vec<ActiveWindow>, Error> {
     let active_workspace_data = json_cmd("hyprctl", &["activeworkspace", "-j"]);
 
     let active_workspace_id = active_workspace_data["id"]
         .as_i64()
-        .expect("Cannot get id from workspace data");
+        .ok_or(Error::DataFetchError("Cannot get id from workspace data"))?;
 
     let active_window_title: String = active_workspace_data["lastwindowtitle"]
         .as_str()
-        .expect("Cannot get active window title from workspace data")
+        .ok_or(Error::DataFetchError(
+            "Cannot get active window title from workspace data",
+        ))?
         .to_owned();
 
     let windows_fetch_result = json_cmd("hyprctl", &["clients", "-j"]);
 
     let active_windows_data: Vec<Value> = windows_fetch_result
         .as_array()
-        .expect("Cannot convert hyprctl clients output as array")
+        .ok_or(Error::DataFetchError(
+            "Cannot convert hyprctl clients output as array",
+        ))?
         .into_iter()
         .cloned()
         .filter(|window_data| {
@@ -204,7 +225,9 @@ fn fetch_active_windows_data() -> Vec<ActiveWindow> {
         .iter()
         .cloned()
         .map(|data| ActiveWindow::from_json_data(data, active_window_title.clone()))
-        .collect::<Vec<ActiveWindow>>();
+        .collect::<Result<Vec<ActiveWindow>, Error>>()?;
+
     windows.sort_by(|w1, w2| w1.group_index.cmp(&w2.group_index));
-    windows
+
+    Ok(windows)
 }

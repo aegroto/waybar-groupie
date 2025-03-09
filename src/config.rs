@@ -7,10 +7,17 @@ pub struct Config {
 
     #[serde(default = "default_socket_address")]
     pub socket_address: String,
+
+    #[serde(default = "default_empty_text")]
+    pub empty_text: String,
 }
 
 fn default_separator() -> String {
     " || ".to_owned()
+}
+
+fn default_empty_text() -> String {
+    "".to_owned()
 }
 
 fn default_socket_address() -> String {
