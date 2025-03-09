@@ -5,16 +5,15 @@ use std::{
 
 use config::Config;
 use error::Error;
-use regex::Regex;
 use serde::Serialize;
-use serde_json::Value;
-use shell::json_cmd;
 use socket::connect_to_hyprland_socket;
+use window::WindowData;
 
 mod config;
 mod error;
 mod shell;
 mod socket;
+mod window;
 
 #[derive(Serialize)]
 struct Output {
@@ -69,7 +68,7 @@ fn main() {
 fn run_update(config: &Config) -> Result<Output, Error> {
     log::debug!("Running update...");
 
-    let active_windows = fetch_active_windows_data()?;
+    let active_windows = WindowData::fetch_active_windows_data()?;
 
     if active_windows.is_empty() {
         return Ok(Output {
@@ -92,150 +91,4 @@ fn run_update(config: &Config) -> Result<Output, Error> {
     log::trace!("Output text length: {}", text.len());
 
     Ok(Output { text })
-}
-
-struct ActiveWindow {
-    pub title: String,
-    pub app_name: String,
-    pub active: bool,
-    pub group_index: usize,
-}
-
-impl ActiveWindow {
-    fn from_json_data(data: Value, active_window_address: String) -> Result<Self, Error> {
-        let address = data["address"]
-            .as_str()
-            .ok_or(Error::WindowDataParsingError("Non-string window address"))?
-            .to_owned();
-
-        let group_index: usize = {
-            data["grouped"]
-                .as_array()
-                .ok_or(Error::WindowDataParsingError("Non-array window group ids"))?
-                .to_owned()
-                .into_iter()
-                .map(|value| {
-                    value
-                        .as_str()
-                        .map(str::to_owned)
-                        .ok_or(Error::WindowDataParsingError("Non-array window group ids"))
-                })
-                .collect::<Result<Vec<String>, Error>>()?
-                .into_iter()
-                .position(|group_address| address == group_address)
-                .unwrap_or(usize::MAX)
-        };
-
-        let title = data["title"]
-            .as_str()
-            .ok_or(Error::WindowDataParsingError("Non-string window title"))?
-            .to_owned();
-
-        Ok(Self {
-            active: address == active_window_address,
-            title,
-            group_index,
-            app_name: data["initialTitle"]
-                .as_str()
-                .ok_or(Error::WindowDataParsingError(
-                    "Non-string window initialTitle",
-                ))?
-                .to_owned(),
-        })
-    }
-
-    fn as_display_str(&self, config: &Config, width: usize) -> String {
-        format!(
-            "<tt><span line_height=\"{}\" background=\"{}\"> {} </span></tt>",
-            config.line_height,
-            self.display_background_color(&config),
-            self.display_formatted_text(width)
-        )
-    }
-
-    fn display_formatted_text(&self, width: usize) -> String {
-        let appless_title = self.title.replace(&format!(" - {}", self.app_name), "");
-
-        let mut text = format!("{}: {}", self.app_name, appless_title);
-
-        let visible_text = {
-            let re = Regex::new(r"[^ -~]+").unwrap();
-            re.replace_all(&text, "")
-        };
-
-        if visible_text.len() > width {
-            log::trace!("Text '{}' out of bounds, truncating...", visible_text);
-            text = format!("{}...", &text[0..width - 3]);
-        } else {
-            let padding = " ".repeat((width - visible_text.len()) / 2);
-            log::trace!(
-                "Padding for '{}': {} (visible length: {}, target width: {})",
-                visible_text,
-                padding.len(),
-                visible_text.len(),
-                width
-            );
-
-            text = format!("{}{}{}", padding, visible_text, padding);
-        }
-
-        log::trace!("Resulting unformatted text length: {}", text.len());
-
-        let formatted_text = if self.active {
-            format!("<b>{}</b>", text)
-        } else {
-            text
-        };
-
-        formatted_text
-    }
-
-    fn display_background_color(&self, config: &Config) -> String {
-        if self.active {
-            config.active_background_color.clone()
-        } else {
-            config.background_color.clone()
-        }
-    }
-}
-
-fn fetch_active_windows_data() -> Result<Vec<ActiveWindow>, Error> {
-    let active_workspace_data = json_cmd("hyprctl", &["activeworkspace", "-j"])?;
-
-    let active_workspace_id = active_workspace_data["id"]
-        .as_i64()
-        .ok_or(Error::DataFetchError("Cannot get id from workspace data"))?;
-
-    let active_window_address: String = active_workspace_data["lastwindow"]
-        .as_str()
-        .ok_or(Error::DataFetchError(
-            "Cannot get active window address from workspace data",
-        ))?
-        .to_owned();
-
-    let windows_fetch_result = json_cmd("hyprctl", &["clients", "-j"])?;
-
-    let active_windows_json_data = windows_fetch_result
-        .as_array()
-        .ok_or(Error::DataFetchError(
-            "Cannot convert hyprctl clients output as array",
-        ))?
-        .into_iter()
-        .cloned()
-        .filter(|window_data| {
-            window_data["workspace"]["id"]
-                .as_i64()
-                .is_some_and(|value| value.eq(&active_workspace_id))
-        })
-        .collect::<Vec<Value>>();
-
-    let mut windows = active_windows_json_data
-        .iter()
-        .cloned()
-        .map(|data| ActiveWindow::from_json_data(data, active_window_address.clone()))
-        .collect::<Result<Vec<ActiveWindow>, Error>>()?;
-
-    windows.sort_by(|w1, w2| w1.group_index.cmp(&w2.group_index));
-
-    Ok(windows)
 }
