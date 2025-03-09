@@ -167,7 +167,7 @@ impl ActiveWindow {
         format!(
             "<tt><span line_height=\"{}\" background=\"{}\"> {} </span></tt>",
             config.line_height,
-            self.display_background_color(),
+            self.display_background_color(&config),
             self.display_formatted_text(width)
         )
     }
@@ -201,7 +201,7 @@ impl ActiveWindow {
         log::trace!("Resulting unformatted text length: {}", text.len());
 
         let formatted_text = if self.active {
-            format!("{}", text)
+            format!("<b>{}</b>", text)
         } else {
             text
         };
@@ -209,11 +209,11 @@ impl ActiveWindow {
         formatted_text
     }
 
-    fn display_background_color(&self) -> &str {
+    fn display_background_color(&self, config: &Config) -> String {
         if self.active {
-            "#FFFFFF66"
+            config.active_background_color.clone()
         } else {
-            "#99999966"
+            config.background_color.clone()
         }
     }
 }

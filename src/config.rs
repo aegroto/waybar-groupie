@@ -16,6 +16,20 @@ pub struct Config {
 
     #[serde(default = "default_line_height")]
     pub line_height: f32,
+
+    #[serde(default = "default_active_background_color")]
+    pub active_background_color: String,
+
+    #[serde(default = "default_background_color")]
+    pub background_color: String,
+}
+
+fn default_active_background_color() -> String {
+    "#ffffff66".to_owned()
+}
+
+fn default_background_color() -> String {
+    "#99999966".to_owned()
 }
 
 fn default_line_height() -> f32 {
