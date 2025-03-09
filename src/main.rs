@@ -119,13 +119,13 @@ struct ActiveWindow {
 }
 
 impl ActiveWindow {
-    fn from_json_data(data: Value, active_window_title: String) -> Result<Self, Error> {
-        let group_index: usize = {
-            let id = data["address"]
-                .as_str()
-                .ok_or(Error::WindowDataParsingError("Non-string window id"))?
-                .to_owned();
+    fn from_json_data(data: Value, active_window_address: String) -> Result<Self, Error> {
+        let address = data["address"]
+            .as_str()
+            .ok_or(Error::WindowDataParsingError("Non-string window address"))?
+            .to_owned();
 
+        let group_index: usize = {
             data["grouped"]
                 .as_array()
                 .ok_or(Error::WindowDataParsingError("Non-array window group ids"))?
@@ -139,7 +139,7 @@ impl ActiveWindow {
                 })
                 .collect::<Result<Vec<String>, Error>>()?
                 .into_iter()
-                .position(|group_id| id == group_id)
+                .position(|group_id| address == group_id)
                 .ok_or(Error::WindowDataParsingError(
                     "Unable to find window id in group data",
                 ))?
@@ -151,7 +151,7 @@ impl ActiveWindow {
             .to_owned();
 
         Ok(Self {
-            active: title == active_window_title,
+            active: address == active_window_address,
             title,
             group_index,
             app_name: data["initialTitle"]
@@ -225,10 +225,10 @@ fn fetch_active_windows_data() -> Result<Vec<ActiveWindow>, Error> {
         .as_i64()
         .ok_or(Error::DataFetchError("Cannot get id from workspace data"))?;
 
-    let active_window_title: String = active_workspace_data["lastwindowtitle"]
+    let active_window_address: String = active_workspace_data["lastwindow"]
         .as_str()
         .ok_or(Error::DataFetchError(
-            "Cannot get active window title from workspace data",
+            "Cannot get active window address from workspace data",
         ))?
         .to_owned();
 
@@ -252,7 +252,7 @@ fn fetch_active_windows_data() -> Result<Vec<ActiveWindow>, Error> {
     let mut windows = active_windows_data
         .iter()
         .cloned()
-        .map(|data| ActiveWindow::from_json_data(data, active_window_title.clone()))
+        .map(|data| ActiveWindow::from_json_data(data, active_window_address.clone()))
         .collect::<Result<Vec<ActiveWindow>, Error>>()?;
 
     windows.sort_by(|w1, w2| w1.group_index.cmp(&w2.group_index));
