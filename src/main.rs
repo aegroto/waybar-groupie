@@ -1,6 +1,5 @@
 use std::{
     io::{BufRead, BufReader},
-    process::Command,
     time::Duration,
 };
 
@@ -9,29 +8,13 @@ use error::Error;
 use regex::Regex;
 use serde::Serialize;
 use serde_json::Value;
+use shell::json_cmd;
 use socket::connect_to_hyprland_socket;
 
 mod config;
 mod error;
+mod shell;
 mod socket;
-
-fn json_cmd(command: &str, args: &[&str]) -> Value {
-    let output_str = String::from_utf8(
-        Command::new(command)
-            .args(args.to_vec())
-            .output()
-            .expect(&format!(
-                "Unable to run command {command} with args {args:?}"
-            ))
-            .stdout,
-    )
-    .expect(&format!(
-        "Unable to convert command {command} {args:?} output to string"
-    ));
-
-    serde_json::from_str(&output_str)
-        .expect("Unable to parse command {command} {args:?} output as JSON")
-}
 
 #[derive(Serialize)]
 struct Output {
@@ -217,7 +200,7 @@ impl ActiveWindow {
 }
 
 fn fetch_active_windows_data() -> Result<Vec<ActiveWindow>, Error> {
-    let active_workspace_data = json_cmd("hyprctl", &["activeworkspace", "-j"]);
+    let active_workspace_data = json_cmd("hyprctl", &["activeworkspace", "-j"])?;
 
     let active_workspace_id = active_workspace_data["id"]
         .as_i64()
@@ -230,7 +213,7 @@ fn fetch_active_windows_data() -> Result<Vec<ActiveWindow>, Error> {
         ))?
         .to_owned();
 
-    let windows_fetch_result = json_cmd("hyprctl", &["clients", "-j"]);
+    let windows_fetch_result = json_cmd("hyprctl", &["clients", "-j"])?;
 
     let active_windows_data: Vec<Value> = windows_fetch_result
         .as_array()

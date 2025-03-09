@@ -1,6 +1,7 @@
 pub enum Error {
     DataFetchError(&'static str),
     WindowDataParsingError(&'static str),
+    ShellCommandError(&'static str),
 }
 
 impl std::fmt::Display for Error {
@@ -8,6 +9,7 @@ impl std::fmt::Display for Error {
         match self {
             Error::DataFetchError(msg) => write!(f, "Data fetching error: {}", msg),
             Error::WindowDataParsingError(msg) => write!(f, "Wiindow data parsing error: {}", msg),
+            Error::ShellCommandError(msg) => write!(f, "Shell command error: {}", msg),
         }
     }
 }
