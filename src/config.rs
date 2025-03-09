@@ -10,6 +10,13 @@ pub struct Config {
 
     #[serde(default = "default_empty_text")]
     pub empty_text: String,
+
+    #[serde(default = "default_width")]
+    pub width: usize,
+}
+
+fn default_width() -> usize {
+    100
 }
 
 fn default_separator() -> String {

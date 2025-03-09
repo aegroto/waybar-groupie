@@ -80,6 +80,8 @@ fn main() {
 }
 
 fn run_update(config: &Config) -> Result<Output, Error> {
+    log::debug!("Running update...");
+
     let active_windows = fetch_active_windows_data()?;
 
     if active_windows.is_empty() {
@@ -89,13 +91,18 @@ fn run_update(config: &Config) -> Result<Output, Error> {
     }
 
     let separator = &config.separator;
-    let window_width = 100 / active_windows.len();
+    let window_width = {
+        let available_width = config.width - (separator.len() * active_windows.len());
+        available_width / active_windows.len()
+    };
 
     let text = active_windows
         .iter()
         .map(|window| window.as_display_str(window_width))
         .collect::<Vec<String>>()
         .join(separator);
+
+    log::trace!("Output text length: {}", text.len());
 
     Ok(Output { text })
 }
@@ -166,11 +173,21 @@ impl ActiveWindow {
         let mut text = format!("{}: {}", self.app_name, appless_title);
 
         if text.len() > width {
+            log::trace!("Text '{}' out of bounds, truncating...", text);
             text = format!("{}...", &text[0..width - 3]);
         } else {
             let padding = " ".repeat((width - text.len()) / 2);
+            log::trace!(
+                "Padding for '{}': {} (length: {}, target width: {})",
+                text,
+                padding.len(),
+                text.len(),
+                width
+            );
             text = format!("{}{}{}", padding, text, padding);
         }
+
+        log::trace!("Resulting unformatted text length: {}", text.len());
 
         let formatted_text = if self.active {
             format!("<b>{}</b>", text)
