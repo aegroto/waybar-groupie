@@ -6,6 +6,7 @@ use std::{
 
 use config::Config;
 use error::Error;
+use regex::Regex;
 use serde::Serialize;
 use serde_json::Value;
 use socket::connect_to_hyprland_socket;
@@ -46,7 +47,10 @@ impl Output {
 
     pub fn print_out(&self) {
         match serde_json::to_string(&self) {
-            Ok(value) => println!("{value}"),
+            Ok(value) => {
+                log::debug!("Printing output: {value}");
+                println!("{value}");
+            }
             Err(err) => panic!("Failed output JSON serialization: {err:?}"),
         }
     }
@@ -92,7 +96,7 @@ fn run_update(config: &Config) -> Result<Output, Error> {
 
     let separator = &config.separator;
     let window_width = {
-        let available_width = config.width - (separator.len() * active_windows.len());
+        let available_width = config.width - (separator.len() * (active_windows.len() - 1));
         available_width / active_windows.len()
     };
 
@@ -161,7 +165,7 @@ impl ActiveWindow {
 
     fn as_display_str(&self, width: usize) -> String {
         format!(
-            "<span line_height=\"1.5\" background=\"{}\"> {} </span>",
+            "<tt><span line_height=\"1.5\" background=\"{}\"> {} </span></tt>",
             self.display_background_color(),
             self.display_formatted_text(width)
         )
@@ -172,25 +176,31 @@ impl ActiveWindow {
 
         let mut text = format!("{}: {}", self.app_name, appless_title);
 
-        if text.len() > width {
-            log::trace!("Text '{}' out of bounds, truncating...", text);
+        let visible_text = {
+            let re = Regex::new(r"[^ -~]+").unwrap();
+            re.replace_all(&text, "")
+        };
+
+        if visible_text.len() > width {
+            log::trace!("Text '{}' out of bounds, truncating...", visible_text);
             text = format!("{}...", &text[0..width - 3]);
         } else {
-            let padding = " ".repeat((width - text.len()) / 2);
+            let padding = " ".repeat((width - visible_text.len()) / 2);
             log::trace!(
-                "Padding for '{}': {} (length: {}, target width: {})",
-                text,
+                "Padding for '{}': {} (visible length: {}, target width: {})",
+                visible_text,
                 padding.len(),
-                text.len(),
+                visible_text.len(),
                 width
             );
-            text = format!("{}{}{}", padding, text, padding);
+
+            text = format!("{}{}{}", padding, visible_text, padding);
         }
 
         log::trace!("Resulting unformatted text length: {}", text.len());
 
         let formatted_text = if self.active {
-            format!("<b>{}</b>", text)
+            format!("{}", text)
         } else {
             text
         };
