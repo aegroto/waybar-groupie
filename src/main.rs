@@ -139,10 +139,8 @@ impl ActiveWindow {
                 })
                 .collect::<Result<Vec<String>, Error>>()?
                 .into_iter()
-                .position(|group_id| address == group_id)
-                .ok_or(Error::WindowDataParsingError(
-                    "Unable to find window id in group data",
-                ))?
+                .position(|group_address| address == group_address)
+                .unwrap_or(usize::MAX)
         };
 
         let title = data["title"]
