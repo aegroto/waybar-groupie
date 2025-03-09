@@ -215,7 +215,7 @@ fn fetch_active_windows_data() -> Result<Vec<ActiveWindow>, Error> {
 
     let windows_fetch_result = json_cmd("hyprctl", &["clients", "-j"])?;
 
-    let active_windows_data: Vec<Value> = windows_fetch_result
+    let active_windows_json_data = windows_fetch_result
         .as_array()
         .ok_or(Error::DataFetchError(
             "Cannot convert hyprctl clients output as array",
@@ -225,12 +225,11 @@ fn fetch_active_windows_data() -> Result<Vec<ActiveWindow>, Error> {
         .filter(|window_data| {
             window_data["workspace"]["id"]
                 .as_i64()
-                .expect("Missing id in window data")
-                .eq(&active_workspace_id)
+                .is_some_and(|value| value.eq(&active_workspace_id))
         })
-        .collect();
+        .collect::<Vec<Value>>();
 
-    let mut windows = active_windows_data
+    let mut windows = active_windows_json_data
         .iter()
         .cloned()
         .map(|data| ActiveWindow::from_json_data(data, active_window_address.clone()))
