@@ -26,7 +26,8 @@ impl WindowData {
 
         if visible_text.len() > width {
             log::trace!("Text '{}' out of bounds, truncating...", visible_text);
-            text.truncate(width - 3);
+            let (last_char_index, _) = text.char_indices().nth(width - 3).unwrap();
+            text.truncate(last_char_index);
             text = format!("{}...", text);
         } else {
             let padding = " ".repeat((width - visible_text.len()) / 2);
