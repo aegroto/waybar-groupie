@@ -76,9 +76,11 @@ fn run_update(config: &Config) -> Result<Output, Error> {
         });
     }
 
-    let separator = &config.separator;
+    let unformatted_separator = &config.separator;
+    let separator = &format!("<tt>{}</tt>", unformatted_separator);
     let window_width = {
-        let available_width = config.width - (separator.len() * (active_windows.len() - 1));
+        let available_width =
+            config.width - (unformatted_separator.len() * (active_windows.len() - 1));
         available_width / active_windows.len()
     };
 
