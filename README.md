@@ -68,3 +68,5 @@ Below is an example of what the JSON configuration file might look like:
     "active_background_color": "#ffffff66",
     "background_color": "#99999966"
 }
+
+The default path to load configuration is ```.config/groupie/config.json```, but it can be overriden by setting the env variable ```GROUPIE_CONFIG_PATH```.
