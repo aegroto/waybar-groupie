@@ -4,6 +4,9 @@ use crate::config::Config;
 
 use super::WindowData;
 
+#[cfg(test)]
+mod test;
+
 impl WindowData {
     pub fn as_display_str(&self, config: &Config, width: usize) -> String {
         format!(
@@ -12,6 +15,10 @@ impl WindowData {
             self.display_background_color(&config),
             self.display_formatted_text(width)
         )
+    }
+
+    fn sanitize_text(text: &str) -> String {
+        Regex::new(r"[<>]+").unwrap().replace_all(text, "").to_string()
     }
 
     fn display_formatted_text(&self, width: usize) -> String {
@@ -41,6 +48,9 @@ impl WindowData {
 
             text = format!("{}{}{}", padding, visible_text, padding);
         }
+
+        text = Self::sanitize_text(&text);
+        log::trace!("Resulting sanitized text: {}", text);
 
         log::trace!("Resulting unformatted text length: {}", text.len());
 
