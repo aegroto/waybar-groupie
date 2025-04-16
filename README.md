@@ -29,7 +29,7 @@ The configuration is read from a JSON file. Below are the details for each confi
 
 ### `separator`
 - **Type**: `string`
-- **Description**: The string used to separate different elements or sections in the display. This can be customized to fit specific visual or functional requirements.
+- **Description**: The string used to separate different window titles. This can be customized to fit specific visual or functional requirements.
 
 ### `socket_address`
 - **Type**: `string`
@@ -41,19 +41,19 @@ The configuration is read from a JSON file. Below are the details for each confi
 
 ### `width`
 - **Type**: `int`
-- **Description**: The width of the display area in terms of the number of characters or units. Adjusting this value will change the horizontal size of the display.
+- **Description**: The width of the widget area in terms of the number of characters. Adjusting this value will may be useful to avoid overlapping.
 
 ### `line_height`
 - **Type**: `float`
-- **Description**: The height of each line in the display. This affects the vertical spacing between lines of text and can be adjusted for better readability or to fit more content on the screen.
+- **Description**: The height of the text line, useful to add a bit of vertical padding.
 
 ### `active_background_color`
 - **Type**: `string`
-- **Description**: The background color used for active or highlighted elements. This color helps in visually distinguishing active elements from others.
+- **Description**: The background color used for the active window title.
 
 ### `background_color`
 - **Type**: `string`
-- **Description**: The default background color for the display. This sets the overall background color of the application interface.
+- **Description**: The background color for inactive window titles. 
 
 ### Example JSON Configuration
 
