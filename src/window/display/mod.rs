@@ -12,7 +12,7 @@ impl WindowData {
         format!(
             "<tt><span line_height=\"{}\" background=\"{}\"> {} </span></tt>",
             config.line_height,
-            self.display_background_color(&config),
+            self.display_background_color(config),
             self.display_formatted_text(width)
         )
     }
@@ -54,13 +54,13 @@ impl WindowData {
 
         log::trace!("Resulting unformatted text length: {}", text.len());
 
-        let formatted_text = if self.active {
+        
+
+        if self.active {
             format!("<b>{}</b>", text)
         } else {
             text
-        };
-
-        formatted_text
+        }
     }
 
     fn display_background_color(&self, config: &Config) -> String {

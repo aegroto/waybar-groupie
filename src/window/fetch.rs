@@ -8,11 +8,11 @@ impl super::WindowData {
 
         let active_workspace_id = active_workspace_data["id"]
             .as_i64()
-            .ok_or(Error::DataFetchError("Cannot get id from workspace data"))?;
+            .ok_or(Error::DataFetch("Cannot get id from workspace data"))?;
 
         let active_window_address: String = active_workspace_data["lastwindow"]
             .as_str()
-            .ok_or(Error::DataFetchError(
+            .ok_or(Error::DataFetch(
                 "Cannot get active window address from workspace data",
             ))?
             .to_owned();
@@ -21,16 +21,14 @@ impl super::WindowData {
 
         let active_windows_json_data = windows_fetch_result
             .as_array()
-            .ok_or(Error::DataFetchError(
+            .ok_or(Error::DataFetch(
                 "Cannot convert hyprctl clients output as array",
             ))?
-            .into_iter()
-            .cloned()
-            .filter(|window_data| {
+            .iter().filter(|&window_data| {
                 window_data["workspace"]["id"]
                     .as_i64()
                     .is_some_and(|value| value.eq(&active_workspace_id))
-            })
+            }).cloned()
             .collect::<Vec<Value>>();
 
         let mut windows = active_windows_json_data

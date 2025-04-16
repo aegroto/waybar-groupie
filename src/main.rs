@@ -86,7 +86,7 @@ fn run_update(config: &Config) -> Result<Output, Error> {
 
     let text = active_windows
         .iter()
-        .map(|window| window.as_display_str(&config, window_width))
+        .map(|window| window.as_display_str(config, window_width))
         .collect::<Vec<String>>()
         .join(separator);
 

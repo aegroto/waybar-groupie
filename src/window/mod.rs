@@ -16,20 +16,19 @@ impl WindowData {
     fn from_json_data(data: Value, active_window_address: String) -> Result<Self, Error> {
         let address = data["address"]
             .as_str()
-            .ok_or(Error::WindowDataParsingError("Non-string window address"))?
+            .ok_or(Error::WindowDataParsing("Non-string window address"))?
             .to_owned();
 
         let group_index: usize = {
             data["grouped"]
                 .as_array()
-                .ok_or(Error::WindowDataParsingError("Non-array window group ids"))?
-                .to_owned()
-                .into_iter()
+                .ok_or(Error::WindowDataParsing("Non-array window group ids"))?
+                .iter()
                 .map(|value| {
                     value
                         .as_str()
                         .map(str::to_owned)
-                        .ok_or(Error::WindowDataParsingError("Non-array window group ids"))
+                        .ok_or(Error::WindowDataParsing("Non-array window group ids"))
                 })
                 .collect::<Result<Vec<String>, Error>>()?
                 .into_iter()
@@ -39,7 +38,7 @@ impl WindowData {
 
         let title = data["title"]
             .as_str()
-            .ok_or(Error::WindowDataParsingError("Non-string window title"))?
+            .ok_or(Error::WindowDataParsing("Non-string window title"))?
             .to_owned();
 
         Ok(Self {
@@ -48,7 +47,7 @@ impl WindowData {
             group_index,
             app_name: data["initialTitle"]
                 .as_str()
-                .ok_or(Error::WindowDataParsingError(
+                .ok_or(Error::WindowDataParsing(
                     "Non-string window initialTitle",
                 ))?
                 .to_owned(),

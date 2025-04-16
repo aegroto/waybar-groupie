@@ -9,7 +9,7 @@ pub fn json_cmd(command: &str, args: &[&str]) -> Result<Value, Error> {
         Ok(output) => output.stdout,
         Err(err) => {
             log::error!("Unable to run command {command} with args {args:?}: {err}");
-            return Err(Error::ShellCommandError(
+            return Err(Error::ShellCommand(
                 "Unable to run command, check logs for more information",
             ));
         }
@@ -21,7 +21,7 @@ pub fn json_cmd(command: &str, args: &[&str]) -> Result<Value, Error> {
             log::error!(
                 "Unable to perform string coversion for output of command {command} with args {args:?}: {err}"
             );
-            return Err(Error::ShellCommandError(
+            return Err(Error::ShellCommand(
                 "Unable to convert command to string, check logs for more information.",
             ));
         }
@@ -31,7 +31,7 @@ pub fn json_cmd(command: &str, args: &[&str]) -> Result<Value, Error> {
         Ok(value) => Ok(value),
         Err(err) => {
             log::error!("Unable to parse command {command} {args:?} output as JSON: {err}");
-            Err(Error::ShellCommandError(
+            Err(Error::ShellCommand(
                 "Unable to convert command to string, check logs for more information.",
             ))
         }

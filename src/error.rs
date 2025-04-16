@@ -1,15 +1,15 @@
 pub enum Error {
-    DataFetchError(&'static str),
-    WindowDataParsingError(&'static str),
-    ShellCommandError(&'static str),
+    DataFetch(&'static str),
+    WindowDataParsing(&'static str),
+    ShellCommand(&'static str),
 }
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::DataFetchError(msg) => write!(f, "Data fetching error: {}", msg),
-            Error::WindowDataParsingError(msg) => write!(f, "Wiindow data parsing error: {}", msg),
-            Error::ShellCommandError(msg) => write!(f, "Shell command error: {}", msg),
+            Error::DataFetch(msg) => write!(f, "Data fetching error: {}", msg),
+            Error::WindowDataParsing(msg) => write!(f, "Wiindow data parsing error: {}", msg),
+            Error::ShellCommand(msg) => write!(f, "Shell command error: {}", msg),
         }
     }
 }
