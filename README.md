@@ -68,5 +68,30 @@ Below is an example of what the JSON configuration file might look like:
     "active_background_color": "#ffffff66",
     "background_color": "#99999966"
 }
+```
 
 The default path to load configuration is ```.config/groupie/config.json```, but it can be overriden by setting the env variable ```GROUPIE_CONFIG_PATH```.
+
+# Miscellaneous tips
+## Monitor and/or ambient specific configurations
+Due to how waybar's custom modules work, the only way is to specify adaptive configurations is to dynamically generate them and override the ```GROUPIE_CONFIG_PATH``` at startup. 
+For instance, this can be achieved through the ```envsubst``` command:
+
+```
+export GROUPIE_WIDTH=55
+export GROUPIE_CONFIG_PATH="/home/lorenzo/.config/groupie/config_edp1.json"
+cat template_config.json | envsubst > "${GROUPIE_CONFIG_PATH}"
+```
+
+In this example the ```template_config.json``` looks like this:
+
+```json
+{
+    "separator": " ",
+    "active_background_color": "#ffff9955",
+    "width": ${GROUPIE_WIDTH}
+}
+```
+
+While the `separator` and the `active_background_color` are common, the `width` value is fetched from the environment by `envsubst` replaced in the file and written to `GROUPIE_CONFIG_PATH`.
+
