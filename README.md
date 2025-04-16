@@ -1,5 +1,7 @@
 # waybar-groupie
 
+![Banner](imgs/banner.webp)
+
 A [waybar custom module](https://github.com/Alexays/Waybar/wiki/Module:-Custom#module-custom-config-return-type) to show [Hyprland's grouped](https://wiki.hyprland.org/Configuring/Window-Rules/#group-window-rule-options) window titles.
 
 Author's disclaimer: This widget has been coded as an hobby project during my spare time for personal use, bugs and incompatibilities with various issue may come up. Feel free to open an issue or to contribute!
