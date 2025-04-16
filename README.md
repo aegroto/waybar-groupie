@@ -4,6 +4,25 @@ A [waybar custom module](https://github.com/Alexays/Waybar/wiki/Module:-Custom#m
 
 Author's disclaimer: This widget has been coded as an hobby project during my spare time for personal use, bugs and incompatibilities with various issue may come up. Feel free to open an issue or to contribute!
 
+# Installation
+
+Groupie must be currently built from source:
+
+```bash
+cargo build --release
+```
+
+Then you can move the resulting ```target/release/waybar-groupie``` binary whenever you prefer and add it to waybar's configuration as follows:
+
+```json
+"custom/windows_widget": {
+        "return-type": "json",
+        "exec": "WAYBAR_GROUPIE_BINARY"
+    }
+```
+
+```"custom/windows_widget"``` must be added to the desired ```modules-*``` list as well.
+
 # Configuration
 
 The configuration is read from a JSON file. Below are the details for each configurable option:
