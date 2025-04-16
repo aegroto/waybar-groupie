@@ -85,7 +85,7 @@ cat template_config.json | envsubst > "${GROUPIE_CONFIG_PATH}"
 
 In this example the ```template_config.json``` looks like this:
 
-```json
+```
 {
     "separator": " ",
     "active_background_color": "#ffff9955",
