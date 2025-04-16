@@ -33,11 +33,11 @@ The configuration is read from a JSON file. Below are the details for each confi
 
 ### `socket_address`
 - **Type**: `string`
-- **Description**: The address of the socket to which the application will bind. This is crucial for network-related functionalities and ensuring the application can communicate over the specified address. Should be left empty most of the times, the socket address is fetched from the environment.
+- **Description**: The address of the Hyprland socket to which the application will bind. Should be left empty in the majority of cases as it fetched from env by default.
 
 ### `empty_text`
 - **Type**: `string`
-- **Description**: The text displayed when there is no data or content to show. This can be used to provide user-friendly messages when the application is in an empty state.
+- **Description**: The text displayed when there is no window opened. This can be used to provide user-friendly messages when the application is in an empty state.
 
 ### `width`
 - **Type**: `int`
