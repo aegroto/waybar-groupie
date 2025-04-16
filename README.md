@@ -75,7 +75,7 @@ Below is an example of what the JSON configuration file might look like:
 The default path to load configuration is ```.config/groupie/config.json```, but it can be overriden by setting the env variable ```GROUPIE_CONFIG_PATH```.
 
 # Miscellaneous tips
-## Monitor and/or ambient specific configurations
+## Monitor and/or environment specific configurations
 Due to how waybar's custom modules work, the only way is to specify adaptive configurations is to dynamically generate them and override the ```GROUPIE_CONFIG_PATH``` at startup. 
 For instance, this can be achieved through the ```envsubst``` command:
 
