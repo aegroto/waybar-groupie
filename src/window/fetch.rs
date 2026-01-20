@@ -1,3 +1,5 @@
+use std::usize;
+
 use serde_json::Value;
 
 use crate::{error::Error, shell::json_cmd};
@@ -37,7 +39,7 @@ impl super::WindowData {
             .map(|data| Self::from_json_data(data, active_window_address.clone()))
             .collect::<Result<Vec<Self>, Error>>()?;
 
-        windows.sort_by(|w1, w2| w1.group_index.cmp(&w2.group_index));
+        windows.sort_by(|w1, w2| w1.group_index.unwrap_or(usize::MAX).cmp(&w2.group_index.unwrap_or(usize::MAX)));
 
         Ok(windows)
     }
