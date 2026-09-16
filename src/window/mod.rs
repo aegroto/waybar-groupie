@@ -9,7 +9,7 @@ pub struct WindowData {
     pub title: String,
     pub app_name: String,
     pub active: bool,
-    pub group_index: usize,
+    pub group_index: Option<usize>,
 }
 
 impl WindowData {
@@ -19,7 +19,7 @@ impl WindowData {
             .ok_or(Error::WindowDataParsing("Non-string window address"))?
             .to_owned();
 
-        let group_index: usize = {
+        let group_index: Option<usize> = {
             data["grouped"]
                 .as_array()
                 .ok_or(Error::WindowDataParsing("Non-array window group ids"))?
@@ -33,7 +33,6 @@ impl WindowData {
                 .collect::<Result<Vec<String>, Error>>()?
                 .into_iter()
                 .position(|group_address| address == group_address)
-                .unwrap_or(usize::MAX)
         };
 
         let title = data["title"]

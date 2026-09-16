@@ -18,7 +18,10 @@ impl WindowData {
     }
 
     fn sanitize_text(text: &str) -> String {
-        Regex::new(r"[<>]+").unwrap().replace_all(text, "").to_string()
+        Regex::new(r"[<>]+")
+            .unwrap()
+            .replace_all(text, "")
+            .to_string()
     }
 
     fn display_formatted_text(&self, width: usize) -> String {
@@ -29,6 +32,11 @@ impl WindowData {
         let visible_text = {
             let re = Regex::new(r"[^ -~]+").unwrap();
             re.replace_all(&text, "")
+        };
+
+        let visible_text = match self.group_index {
+            Some(_) => visible_text.to_string(),
+            None => format!("* {}", visible_text),
         };
 
         if visible_text.len() > width {
@@ -53,8 +61,6 @@ impl WindowData {
         log::trace!("Resulting sanitized text: {}", text);
 
         log::trace!("Resulting unformatted text length: {}", text.len());
-
-        
 
         if self.active {
             format!("<b>{}</b>", text)
